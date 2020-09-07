@@ -19,6 +19,7 @@ namespace emote_gui_dotnet_win
         private EmoteQueryClient _eqc = new EmoteQueryClient();
         private WebClient _web = new WebClient();
         private Queue<string> _imgQ = new Queue<string>();
+        private Task _dlTask;
 
         public EmoteSearchForm()
         {
@@ -33,6 +34,7 @@ namespace emote_gui_dotnet_win
         public void QueryEmote(object sender, EventArgs args)
         {
             _imgQ.Clear();
+            _dlTask?.Wait();
             emoteList.Items.Clear();
             emoteList.SmallImageList?.Dispose();
 
@@ -73,10 +75,10 @@ namespace emote_gui_dotnet_win
                     //message += $"{reader.GetString(0)} - {reader.GetString(1)}\n";
                 }
             }
-            //TODO: handle cancellation of this correctly
+            _dlTask = Task.Run(AddImages);
         }
 
-        private async void AddImages()
+        private async Task AddImages()
         {
             while(_imgQ.Any())
             {

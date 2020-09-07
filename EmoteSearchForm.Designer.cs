@@ -50,7 +50,7 @@ namespace emote_gui_dotnet_win
             Opacity = 0.9D;
             ControlBox = false;
             ShowIcon = false;
-            ShowInTaskbar = false;
+            //ShowInTaskbar = false;
             StartPosition = FormStartPosition.CenterScreen;
             FormBorderStyle = FormBorderStyle.FixedToolWindow;
 
