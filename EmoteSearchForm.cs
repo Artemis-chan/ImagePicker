@@ -43,7 +43,21 @@ namespace emote_gui_dotnet_win
             }
             else if(e.KeyCode == Keys.Enter)
             {
-
+                if(emoteList.Items.Count > 0)
+                {
+                    object url;
+                    if(emoteList.SelectedItems.Count < 1)
+                    {
+                        url = emoteList.Items[0].Tag;
+                    }
+                    else
+                    {
+                        url = emoteList.SelectedItems[0].Tag;
+                    }
+                    //MessageBox.Show((string)url);
+                    Clipboard.SetText((string)url);
+                }
+                Application.Exit();
             }
             else if(!queryInput.Focused)
             {
@@ -91,8 +105,10 @@ namespace emote_gui_dotnet_win
                 int i = 0;
                 while (reader.Read())
                 {
-                    _imgQ.Enqueue(reader.GetString(0));
-                    emoteList.Items.Add(reader.GetString(1), i++);
+                    var url = reader.GetString(0);
+                    _imgQ.Enqueue(url);
+                    emoteList.Items.Add(reader.GetString(1), i);
+                    emoteList.Items[i++].Tag = url;
                     //message += $"{reader.GetString(0)} - {reader.GetString(1)}\n";
                 }
             }

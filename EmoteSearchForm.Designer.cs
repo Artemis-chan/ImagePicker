@@ -68,6 +68,7 @@ namespace emote_gui_dotnet_win
             emoteList.Size = new System.Drawing.Size(636, 178);
             emoteList.TabIndex = 1;
             emoteList.Columns.Add("Emote", 634);
+            emoteList.MultiSelect = false;
             emoteList.UseCompatibleStateImageBehavior = false;
             emoteList.View = View.Details;
         }
