@@ -11,6 +11,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using emote_gui_dotnet_win.DB;
+using System.Runtime.InteropServices;
 
 namespace emote_gui_dotnet_win
 {
@@ -19,7 +20,7 @@ namespace emote_gui_dotnet_win
         private EmoteQueryClient _eqc = new EmoteQueryClient();
         private WebClient _web = new WebClient();
         private Queue<string> _imgQ = new Queue<string>();
-        private Task _dlTask;
+        private Task? _dlTask = null;
 
         public EmoteSearchForm()
         {
@@ -28,18 +29,23 @@ namespace emote_gui_dotnet_win
 
         ~EmoteSearchForm()
         {
+            MessageBox.Show("close form");
             _web.Dispose();
+            Program.instanceRunning = false;
         }
 
         public void Form_KeyDown(object sender, KeyEventArgs e)
         {
+            //TODO: find out a way to pass input to newly focused control
             if(e.KeyCode == Keys.Escape)
-                Application.Exit();
+                Close();
 
             if(e.KeyCode == Keys.Up || e.KeyCode == Keys.Down)
             {
                 if(!emoteList.Focused)
+                {
                     emoteList.Focus();
+                }
             }
             else if(e.KeyCode == Keys.Enter)
             {
@@ -57,7 +63,7 @@ namespace emote_gui_dotnet_win
                     //MessageBox.Show((string)url);
                     Clipboard.SetText((string)url);
                 }
-                Application.Exit();
+                Close();
             }
             else if(!queryInput.Focused)
             {
