@@ -50,6 +50,8 @@ namespace emote_gui_dotnet_win
             Opacity = 0.9D;
             ControlBox = false;
             ShowIcon = false;
+            KeyPreview = true;
+            KeyDown += new KeyEventHandler(Form_KeyDown);
             //ShowInTaskbar = false;
             StartPosition = FormStartPosition.CenterScreen;
             FormBorderStyle = FormBorderStyle.FixedToolWindow;

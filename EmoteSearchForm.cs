@@ -31,6 +31,27 @@ namespace emote_gui_dotnet_win
             _web.Dispose();
         }
 
+        public void Form_KeyDown(object sender, KeyEventArgs e)
+        {
+            if(e.KeyCode == Keys.Escape)
+                Application.Exit();
+
+            if(e.KeyCode == Keys.Up || e.KeyCode == Keys.Down)
+            {
+                if(!emoteList.Focused)
+                    emoteList.Focus();
+            }
+            else if(e.KeyCode == Keys.Enter)
+            {
+
+            }
+            else if(!queryInput.Focused)
+            {
+                queryInput.Focus();
+            }
+        }
+
+#region Query
         public void QueryEmote(object sender, EventArgs args)
         {
             _imgQ.Clear();
@@ -93,6 +114,7 @@ namespace emote_gui_dotnet_win
             //File.WriteAllBytes( new Uri(url).Segments.Last() + ".png", _web.DownloadData(url));
             return Image.FromStream(new MemoryStream(await _web.DownloadDataTaskAsync(url)));
         }
+        #endregion
 
     }
 }
