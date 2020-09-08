@@ -17,7 +17,7 @@ namespace emote_gui_dotnet_win
 {
     static class Program
     {
-        public static EmoteSearchForm? runninginstance;
+        public static EmoteSearchForm runninginstance;
 
         [STAThread]
         static void Main()

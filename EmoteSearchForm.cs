@@ -20,7 +20,7 @@ namespace emote_gui_dotnet_win
         private EmoteQueryClient _eqc = new EmoteQueryClient();
         private WebClient _web = new WebClient();
         private Queue<string> _imgQ = new Queue<string>();
-        private Task? _dlTask = null;
+        private Task _dlTask = null;
 
         public EmoteSearchForm()
         {
@@ -125,16 +125,18 @@ namespace emote_gui_dotnet_win
         {
             while(_imgQ.Any())
             {
-                var url = _imgQ.Dequeue();
-                try
+                if(_imgQ.TryDequeue(out string url))
                 {
-                    emoteList.SmallImageList.Images.Add(await GetImage(url));
+                    try
+                    {
+                        emoteList.SmallImageList.Images.Add(await GetImage(url));
+                    }
+                    catch (WebException)
+                    {
+                        return;
+                    }
+                    emoteList.Refresh();
                 }
-                catch(WebException)
-                {
-                    return;
-                }
-                emoteList.Refresh();
             }
         }
 
