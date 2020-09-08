@@ -24,21 +24,20 @@ namespace emote_gui_dotnet_win
 
         public EmoteSearchForm()
         {
+            Program.runninginstance = this;
             InitializeComponent();
         }
 
         ~EmoteSearchForm()
         {
-            MessageBox.Show("close form");
             _web.Dispose();
-            Program.instanceRunning = false;
         }
 
         public void Form_KeyDown(object sender, KeyEventArgs e)
         {
             //TODO: find out a way to pass input to newly focused control
             if(e.KeyCode == Keys.Escape)
-                Close();
+                Hide();
 
             if(e.KeyCode == Keys.Up || e.KeyCode == Keys.Down)
             {
@@ -63,7 +62,7 @@ namespace emote_gui_dotnet_win
                     //MessageBox.Show((string)url);
                     Clipboard.SetText((string)url);
                 }
-                Close();
+                Hide();
             }
             else if(!queryInput.Focused)
             {
@@ -71,10 +70,11 @@ namespace emote_gui_dotnet_win
             }
         }
 
-#region Query
+        #region Query
         public void QueryEmote(object sender, EventArgs args)
         {
             _imgQ.Clear();
+            _web.CancelAsync();
             _dlTask?.Wait();
             emoteList.Items.Clear();
             emoteList.SmallImageList?.Dispose();
@@ -126,7 +126,14 @@ namespace emote_gui_dotnet_win
             while(_imgQ.Any())
             {
                 var url = _imgQ.Dequeue();
-                emoteList.SmallImageList.Images.Add(await GetImage(url));
+                try
+                {
+                    emoteList.SmallImageList.Images.Add(await GetImage(url));
+                }
+                catch(WebException)
+                {
+                    return;
+                }
                 emoteList.Refresh();
             }
         }

@@ -1,9 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using Externs;
 using GlobalHook.Core;
 using GlobalHook.Core.Keyboard;
 using GlobalHook.Core.MessageLoop;
@@ -15,11 +17,8 @@ namespace emote_gui_dotnet_win
 {
     static class Program
     {
-        public static bool instanceRunning = false;
+        public static EmoteSearchForm? runninginstance;
 
-        /// <summary>
-        ///  The main entry point for the application.
-        /// </summary>
         [STAThread]
         static void Main()
         {
@@ -30,9 +29,13 @@ namespace emote_gui_dotnet_win
 
             kbHook.OnEvent += (_, e) =>
             {
-                if (e.Key.HasFlags(Keys.Control, Keys.Shift, Keys.S))
+                if (e.Key.HasFlags(Keys.Alt, Keys.Shift, Keys.Q))
+                {
                     source.Cancel();
-                else if(e.Key.HasFlags(Keys.Control, Keys.Shift, Keys.E))
+                    Application.Exit();
+                    //Environment.Exit();
+                }
+                else if (e.Key.HasFlags(Keys.Alt, Keys.E))
                     StartAppInstance();
             };
 
@@ -42,13 +45,29 @@ namespace emote_gui_dotnet_win
         }
         private static void StartAppInstance()
         {
-            if(instanceRunning)
-                return;
-            instanceRunning = true;
-            Application.SetHighDpiMode(HighDpiMode.SystemAware);
-            Application.EnableVisualStyles();
-            Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new EmoteSearchForm());
+            if(runninginstance != null)
+            {
+                if(!runninginstance.Visible)
+                {
+                    runninginstance.Show();
+                }
+                else
+                {
+                    User32.ShowWindow(runninginstance.Handle, 6);
+                    User32.ShowWindow(runninginstance.Handle, 9);
+                    User32.SetForegroundWindow(runninginstance.Handle);
+                }
+                
+            }
+            else
+            {
+                Application.SetHighDpiMode(HighDpiMode.SystemAware);
+                Application.EnableVisualStyles();
+                Application.SetCompatibleTextRenderingDefault(false);
+                Application.Run(new EmoteSearchForm());
+            }
         }
+
+
     }
 }

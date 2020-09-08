@@ -47,7 +47,7 @@ namespace emote_gui_dotnet_win
             ClientSize = new System.Drawing.Size(660, 230);
             Controls.Add(emoteList);
             Controls.Add(queryInput);
-            Opacity = 0.9D;
+            Opacity = 0.8D;
             ControlBox = false;
             ShowIcon = false;
             KeyPreview = true;
