@@ -11,7 +11,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using emote_gui_dotnet_win.DB;
-using System.Runtime.InteropServices;
 
 namespace emote_gui_dotnet_win
 {
@@ -44,6 +43,8 @@ namespace emote_gui_dotnet_win
                 if(!emoteList.Focused)
                 {
                     emoteList.Focus();
+                    e.SuppressKeyPress = true;
+                    SendKeys.Send(e.KeyCode.ToString());
                 }
             }
             else if(e.KeyCode == Keys.Enter)
@@ -79,9 +80,12 @@ namespace emote_gui_dotnet_win
             emoteList.Items.Clear();
             emoteList.SmallImageList?.Dispose();
 
+            if(String.IsNullOrWhiteSpace(queryInput.Text))
+                return;
+
             //var message = "";
-            var dir = @"Z:\Amick\Pictures\Microsoft Clip Organizer";
-            var files = Directory.GetFiles(dir);
+            // var dir = @"Z:\Amick\Pictures\Microsoft Clip Organizer";
+            // var files = Directory.GetFiles(dir);
             var imgs = new ImageList(){ ImageSize = new Size(32, 32) };
 
             emoteList.SmallImageList = imgs;
@@ -131,10 +135,10 @@ namespace emote_gui_dotnet_win
                     {
                         emoteList.SmallImageList.Images.Add(await GetImage(url));
                     }
-                    catch (WebException)
+                    catch(Exception)
                     {
-                        return;
                     }
+
                     emoteList.Refresh();
                 }
             }
