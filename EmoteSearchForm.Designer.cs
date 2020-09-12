@@ -72,6 +72,7 @@ namespace emote_gui_dotnet_win
             emoteList.MultiSelect = false;
             emoteList.UseCompatibleStateImageBehavior = false;
             emoteList.View = View.Details;
+            //TODO: change highlight color when not focused
         }
 
         private void InitQueryInput()

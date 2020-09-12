@@ -64,9 +64,18 @@ namespace emote_gui_dotnet_win
 
         protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
         {
-            if(msg.HWnd != emoteList.Handle && (keyData == Keys.Up || keyData == Keys.Down))
+            if(keyData == Keys.Up || keyData == Keys.Down)
             {
-                User32.PostMessage(emoteList.Handle, msg.Msg, msg.WParam, msg.LParam);
+                if (msg.HWnd != emoteList.Handle)
+                {
+                    User32.PostMessage(emoteList.Handle, msg.Msg, msg.WParam, msg.LParam);
+                    return true;
+                }
+            }
+            else if(msg.HWnd != queryInput.Handle)
+            {
+                queryInput.Focus();
+                User32.PostMessage(queryInput.Handle, msg.Msg, msg.WParam, msg.LParam);
                 return true;
             }
             return base.ProcessCmdKey(ref msg, keyData);
