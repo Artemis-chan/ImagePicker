@@ -12,6 +12,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using emote_gui_dotnet_win.DB;
 using emote_gui_dotnet_win.DL;
+using Externs;
 
 namespace emote_gui_dotnet_win
 {
@@ -34,21 +35,14 @@ namespace emote_gui_dotnet_win
         // {
         // }
 
+        #region Input
         public void Form_KeyDown(object sender, KeyEventArgs e)
         {
             //TODO: find out a way to pass input to newly focused control
             if(e.KeyCode == Keys.Escape)
                 Hide();
 
-            if(e.KeyCode == Keys.Up || e.KeyCode == Keys.Down)
-            {
-                if(!emoteList.Focused)
-                {
-                    emoteList.Focus();
-                    e.SuppressKeyPress = true;
-                }
-            }
-            else if(e.KeyCode == Keys.Enter)
+            if(e.KeyCode == Keys.Enter)
             {
                 if(emoteList.Items.Count > 0)
                 {
@@ -66,12 +60,19 @@ namespace emote_gui_dotnet_win
                 }
                 Hide();
             }
-            else if(!queryInput.Focused)
-            {
-                queryInput.Focus();
-                e.SuppressKeyPress = true;
-            }
         }
+
+        protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
+        {
+            if(msg.HWnd != emoteList.Handle && (keyData == Keys.Up || keyData == Keys.Down))
+            {
+                User32.PostMessage(emoteList.Handle, msg.Msg, msg.WParam, msg.LParam);
+                return true;
+            }
+            return base.ProcessCmdKey(ref msg, keyData);
+        }
+
+        #endregion
 
         #region Query
         public void QueryEmote(object sender, EventArgs args)
