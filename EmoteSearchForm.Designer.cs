@@ -35,6 +35,7 @@ namespace emote_gui_dotnet_win
 
             queryInput = new TextBox();
             emoteList = new ListView();
+            _web = new DL.AsyncListDownloader(emoteList);
 
             //queryInput
             InitQueryInput();

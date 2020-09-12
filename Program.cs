@@ -29,7 +29,7 @@ namespace emote_gui_dotnet_win
 
             kbHook.OnEvent += (_, e) =>
             {
-                if (e.Key.HasFlags(Keys.Alt, Keys.Shift, Keys.Q))
+                if (e.Key.HasFlags(Keys.Alt, Keys.Control, Keys.Q))
                 {
                     source.Cancel();
                     Application.Exit();

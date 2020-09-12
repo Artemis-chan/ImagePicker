@@ -11,27 +11,28 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using emote_gui_dotnet_win.DB;
+using emote_gui_dotnet_win.DL;
 
 namespace emote_gui_dotnet_win
 {
     public partial class EmoteSearchForm : Form
     {
         private EmoteQueryClient _eqc = new EmoteQueryClient();
-        private WebClient _web = new WebClient();
-        private Queue<string> _imgQ = new Queue<string>();
-        private Task _dlTask = null;
+        private AsyncListDownloader _web;
+        private Task _listTask = null;
         private CancellationTokenSource _cancelSource = null;
+        private TaskScheduler _taskScheduler;
 
         public EmoteSearchForm()
         {
             Program.runninginstance = this;
+            _taskScheduler = TaskScheduler.FromCurrentSynchronizationContext();
             InitializeComponent();
         }
 
-        ~EmoteSearchForm()
-        {
-            _web.Dispose();
-        }
+        // ~EmoteSearchForm()
+        // {
+        // }
 
         public void Form_KeyDown(object sender, KeyEventArgs e)
         {
@@ -75,7 +76,6 @@ namespace emote_gui_dotnet_win
         #region Query
         public void QueryEmote(object sender, EventArgs args)
         {
-            _imgQ.Clear();
             CancelImageFill();
             emoteList.Items.Clear();
             emoteList.SmallImageList?.Dispose();
@@ -103,7 +103,7 @@ namespace emote_gui_dotnet_win
             // }
 
             _cancelSource = new CancellationTokenSource();
-            _dlTask = Task.Factory.StartNew(FillImages, _cancelSource.Token, TaskCreationOptions.LongRunning, TaskScheduler.Default);
+            _listTask = Task.Factory.StartNew(FillImages, _cancelSource.Token);
 
             //MessageBox.Show(message);
 
@@ -112,25 +112,32 @@ namespace emote_gui_dotnet_win
         private void CancelImageFill()
         {
             _cancelSource?.Cancel();
-            _web.CancelAsync();
             try
             {
-                _dlTask?.Wait();
+                _listTask?.Wait();
             }
-            catch(Exception)
+            catch(AggregateException)
             { }
 
+            _web.Cancel();
         }
 
-        private async Task FillImages()
+        private Task FillImages()
         {
+            if(InvokeRequired)
+            {
+                _listTask = new Task(() => FillImages());
+                _listTask.RunSynchronously(_taskScheduler);
+                return Task.CompletedTask;
+            }
+
             using (var reader = _eqc.GetEmotesReader(queryInput.Text))
             {
                 int i = 0;
                 while (reader.Read())
                 {
                     var url = reader.GetString(0);
-                    _imgQ.Enqueue(url);
+                    _web.AddDl(url);
                     emoteList.Items.Add(reader.GetString(1), i);
                     emoteList.Items[i++].Tag = url;
                     //message += $"{reader.GetString(0)} - {reader.GetString(1)}\n";
@@ -140,24 +147,7 @@ namespace emote_gui_dotnet_win
                     }
                 }
             }
-
-            while (_imgQ.Any())
-            {
-                if (_imgQ.TryDequeue(out string url))
-                {
-                    try
-                    {
-                        emoteList.SmallImageList.Images.Add(
-                            Image.FromStream(new MemoryStream(await _web.DownloadDataTaskAsync(url))));
-                    }
-                    catch (Exception)
-                    {
-                        return;
-                    }
-
-                    emoteList.Refresh();
-                }
-            }
+            return Task.CompletedTask;
         }
         #endregion
 
