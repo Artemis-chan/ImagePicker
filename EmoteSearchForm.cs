@@ -46,7 +46,6 @@ namespace emote_gui_dotnet_win
                 {
                     emoteList.Focus();
                     e.SuppressKeyPress = true;
-                    SendKeys.Send(e.KeyCode.ToString());
                 }
             }
             else if(e.KeyCode == Keys.Enter)
@@ -70,6 +69,7 @@ namespace emote_gui_dotnet_win
             else if(!queryInput.Focused)
             {
                 queryInput.Focus();
+                e.SuppressKeyPress = true;
             }
         }
 
