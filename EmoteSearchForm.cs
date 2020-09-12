@@ -20,6 +20,7 @@ namespace emote_gui_dotnet_win
         private WebClient _web = new WebClient();
         private Queue<string> _imgQ = new Queue<string>();
         private Task _dlTask = null;
+        private CancellationTokenSource _cancelSource = null;
 
         public EmoteSearchForm()
         {
@@ -75,8 +76,7 @@ namespace emote_gui_dotnet_win
         public void QueryEmote(object sender, EventArgs args)
         {
             _imgQ.Clear();
-            _web.CancelAsync();
-            _dlTask?.Wait();
+            CancelImageFill();
             emoteList.Items.Clear();
             emoteList.SmallImageList?.Dispose();
 
@@ -102,13 +102,27 @@ namespace emote_gui_dotnet_win
             //     //emoteList.Items.Add(item);
             // }
 
-            FillImages();
+            _cancelSource = new CancellationTokenSource();
+            _dlTask = Task.Factory.StartNew(FillImages, _cancelSource.Token, TaskCreationOptions.LongRunning, TaskScheduler.Default);
 
             //MessageBox.Show(message);
 
         }
 
-        private void FillImages()
+        private void CancelImageFill()
+        {
+            _cancelSource?.Cancel();
+            _web.CancelAsync();
+            try
+            {
+                _dlTask?.Wait();
+            }
+            catch(Exception)
+            { }
+
+        }
+
+        private async Task FillImages()
         {
             using (var reader = _eqc.GetEmotesReader(queryInput.Text))
             {
@@ -120,34 +134,30 @@ namespace emote_gui_dotnet_win
                     emoteList.Items.Add(reader.GetString(1), i);
                     emoteList.Items[i++].Tag = url;
                     //message += $"{reader.GetString(0)} - {reader.GetString(1)}\n";
+                    if (_cancelSource.Token.IsCancellationRequested)
+                    {
+                        _cancelSource.Token.ThrowIfCancellationRequested();
+                    }
                 }
             }
-            _dlTask = Task.Run(AddImages);
-        }
 
-        private async Task AddImages()
-        {
-            while(_imgQ.Any())
+            while (_imgQ.Any())
             {
-                if(_imgQ.TryDequeue(out string url))
+                if (_imgQ.TryDequeue(out string url))
                 {
                     try
                     {
-                        emoteList.SmallImageList.Images.Add(await GetImage(url));
+                        emoteList.SmallImageList.Images.Add(
+                            Image.FromStream(new MemoryStream(await _web.DownloadDataTaskAsync(url))));
                     }
-                    catch(Exception)
+                    catch (Exception)
                     {
+                        return;
                     }
 
                     emoteList.Refresh();
                 }
             }
-        }
-
-        private async Task<Image> GetImage(string url)
-        {
-            //File.WriteAllBytes( new Uri(url).Segments.Last() + ".png", _web.DownloadData(url));
-            return Image.FromStream(new MemoryStream(await _web.DownloadDataTaskAsync(url)));
         }
         #endregion
 
