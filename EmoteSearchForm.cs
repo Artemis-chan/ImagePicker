@@ -96,7 +96,7 @@ namespace emote_gui_dotnet_win
             //var message = "";
             // var dir = @"Z:\Amick\Pictures\Microsoft Clip Organizer";
             // var files = Directory.GetFiles(dir);
-            var imgs = new ImageList(){ ImageSize = new Size(32, 32) };
+            var imgs = new ImageList(){ ImageSize = new Size(32, 32), ColorDepth = ColorDepth.Depth32Bit };
 
             emoteList.SmallImageList = imgs;
 
