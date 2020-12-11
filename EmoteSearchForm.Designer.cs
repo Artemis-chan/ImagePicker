@@ -36,7 +36,6 @@ namespace emote_gui_dotnet_win
 
             queryInput = new TextBox();
             emoteList = new ListView();
-            _web = new DL.AsyncListDownloader(emoteList);
 
             //queryInput
             InitQueryInput();
@@ -49,7 +48,7 @@ namespace emote_gui_dotnet_win
             ClientSize = new System.Drawing.Size(524, 225);
             Controls.Add(emoteList);
             Controls.Add(queryInput);
-            BackColor = Color.FromArgb(32, 32, 32);
+            BackColor = Color.FromArgb(32, 32, 40);
             //Opacity = 0.8D;
             ControlBox = false;
             ShowIcon = false;
@@ -66,31 +65,28 @@ namespace emote_gui_dotnet_win
 
         private void InitEmoteList()
         {
-            emoteList.Location = new System.Drawing.Point(6, 6);
             emoteList.Name = "Emote List";
+            emoteList.Location = new System.Drawing.Point(6, 6);
             emoteList.Size = new System.Drawing.Size(512, 184);
-            emoteList.TabIndex = 1;
-            emoteList.Columns.Add("Emote", 634);
-            emoteList.MultiSelect = false;
-            emoteList.UseCompatibleStateImageBehavior = false;
-            emoteList.View = View.Details;
-            emoteList.HideSelection = false;
-            emoteList.HeaderStyle = ColumnHeaderStyle.None;
-            emoteList.BackColor = Color.FromArgb(35, 60, 60);
+            emoteList.BackColor = Color.FromArgb(60, 60, 68);
             emoteList.ForeColor = Color.WhiteSmoke;
-
-            //TODO: change highlight color when not focused
+            emoteList.TabIndex = 1;
+            emoteList.MultiSelect = false;
+            emoteList.UseCompatibleStateImageBehavior = true;
+            emoteList.HeaderStyle = ColumnHeaderStyle.None;
+            emoteList.View = View.LargeIcon;
+            emoteList.HideSelection = false;
         }
 
         private void InitQueryInput()
         {
-            queryInput.Location = new System.Drawing.Point(6, 198);
             queryInput.Name = "Query Input";
+            queryInput.Location = new System.Drawing.Point(6, 198);
             queryInput.Size = new System.Drawing.Size(512, 20);
-            queryInput.TabIndex = 0;
-            queryInput.TextChanged += new System.EventHandler(QueryEmote);
-            queryInput.BackColor = Color.FromArgb(60, 90, 90);
+            queryInput.BackColor = Color.FromArgb(90, 90, 95);
             queryInput.ForeColor = Color.WhiteSmoke;
+            queryInput.TextChanged += new System.EventHandler(QueryEmote);
+            queryInput.TabIndex = 0;
         }
 
         #endregion

@@ -4,7 +4,7 @@ namespace emote_gui_dotnet_win.DB
 {
     public class EmoteQueryClient
     {
-        private SqliteConnection _conx = new SqliteConnection("Data Source=gg_anime.db");
+        private SqliteConnection _conx = new SqliteConnection("Data Source=images.db");
         private SqliteCommand _cmmd;
         private SqliteParameter _param;
 
@@ -12,7 +12,7 @@ namespace emote_gui_dotnet_win.DB
         {
             _conx.Open();
             _cmmd = _conx.CreateCommand();
-            _cmmd.CommandText = "SELECT * FROM emotes WHERE name LIKE $name";
+            _cmmd.CommandText = "SELECT * FROM images WHERE name LIKE $name";
             _param = _cmmd.CreateParameter();
             _param.ParameterName = "$name";
             _cmmd.Parameters.Add(_param);

@@ -12,6 +12,7 @@ using GlobalHook.Core.MessageLoop;
 using GlobalHook.Core.Windows.Keyboard;
 using GlobalHook.Core.Windows.MessageLoop;
 using Keys = GlobalHook.Core.Keyboard.Keys;
+using ImageDB;
 
 namespace emote_gui_dotnet_win
 {
@@ -22,10 +23,17 @@ namespace emote_gui_dotnet_win
         [STAThread]
         static void Main()
         {
+#if !DEBUG
+            if(false) //TODO: add parameter check
+#endif
+                User32.AllocConsole();
+            // ImageDBCreator.CreateDB();
+
             IKeyboardHook kbHook = new KeyboardHook();
             IMessageLoop loop = new MessageLoop();
 
             CancellationTokenSource source = new CancellationTokenSource();
+
 
             kbHook.OnEvent += (_, e) =>
             {
@@ -39,7 +47,11 @@ namespace emote_gui_dotnet_win
                     StartAppInstance();
             };
 
+#if DEBUG
+            Console.WriteLine("hello");
+#else
             MessageBox.Show("Emote Box Running!");
+#endif            
             loop.Run(source.Token, kbHook);
 
         }

@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
+using System.Drawing.Drawing2D;
 using System.Net;
 using System.Linq;
 using System.Text;
@@ -11,23 +12,22 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using emote_gui_dotnet_win.DB;
-using emote_gui_dotnet_win.DL;
 using Externs;
 
 namespace emote_gui_dotnet_win
 {
     public partial class EmoteSearchForm : Form
     {
+        private const int THUMB_SIZE = 38;
+
         private EmoteQueryClient _eqc = new EmoteQueryClient();
-        private AsyncListDownloader _web;
-        private Task _listTask = null;
-        private CancellationTokenSource _cancelSource = null;
-        private TaskScheduler _taskScheduler;
+
+        private Task _imageTask = null;
+        private bool _cancelLoad = false;
 
         public EmoteSearchForm()
         {
             Program.runninginstance = this;
-            _taskScheduler = TaskScheduler.FromCurrentSynchronizationContext();
             InitializeComponent();
         }
 
@@ -40,31 +40,37 @@ namespace emote_gui_dotnet_win
         {
             //TODO: find out a way to pass input to newly focused control
             if(e.KeyCode == Keys.Escape)
+            {
                 Hide();
+                e.SuppressKeyPress = true;
+            }
 
             if(e.KeyCode == Keys.Enter)
             {
                 if(emoteList.Items.Count > 0)
                 {
-                    object url;
+                    int imageIndex;
                     if(emoteList.SelectedItems.Count < 1)
                     {
-                        url = emoteList.Items[0].Tag;
+                        imageIndex = emoteList.Items[0].ImageIndex;
                     }
                     else
                     {
-                        url = emoteList.SelectedItems[0].Tag;
+                        imageIndex = emoteList.SelectedItems[0].ImageIndex;
                     }
-                    //MessageBox.Show((string)url);
-                    Clipboard.SetText((string)url);
+                    //MessageBox.Show((string)path);
+                    // Clipboard.SetText((string)path);
+                    Clipboard.SetImage(emoteList.LargeImageList.Images[imageIndex]);
+                    // Clipboard.SetImage(Image.FromFile((string)emoteList.LargeImageList.Images.Keys[imageIndex]));
                 }
                 Hide();
+                e.SuppressKeyPress = true;
             }
         }
 
         protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
         {
-            if(keyData == Keys.Up || keyData == Keys.Down)
+            if(keyData == Keys.Up || keyData == Keys.Down || keyData == Keys.Right || keyData == Keys.Left)
             {
                 if (msg.HWnd != emoteList.Handle)
                 {
@@ -86,9 +92,13 @@ namespace emote_gui_dotnet_win
         #region Query
         public void QueryEmote(object sender, EventArgs args)
         {
-            CancelImageFill();
+            //for debugging purposes
+            // ResizedImage("images/airfish.png");
+            // return;
+            CancelFill();
+
             emoteList.Items.Clear();
-            emoteList.SmallImageList?.Dispose();
+            emoteList.LargeImageList?.Dispose();
 
             if(String.IsNullOrWhiteSpace(queryInput.Text))
                 return;
@@ -96,9 +106,9 @@ namespace emote_gui_dotnet_win
             //var message = "";
             // var dir = @"Z:\Amick\Pictures\Microsoft Clip Organizer";
             // var files = Directory.GetFiles(dir);
-            var imgs = new ImageList(){ ImageSize = new Size(32, 32), ColorDepth = ColorDepth.Depth32Bit };
+            var imgs = new ImageList(){ ImageSize = new Size(THUMB_SIZE, THUMB_SIZE), ColorDepth = ColorDepth.Depth32Bit, TransparentColor = Color.Transparent };
 
-            emoteList.SmallImageList = imgs;
+            emoteList.LargeImageList = imgs;
 
             // for (int i = 0; i < files.Length; i++)
             // {
@@ -107,58 +117,166 @@ namespace emote_gui_dotnet_win
             // }
             // for (int i = 0; i < files.Length; i++)
             // {
-            //     string item = files[i];
-            //     emoteList.SmallImageList.Images.Add(Image.FromFile(item));
+            //     string item = file;
+            //     emoteList.LargeImageList.Images.Add(Image.FromFile(item));
             //     //emoteList.Items.Add(item);
             // }
 
-            _cancelSource = new CancellationTokenSource();
-            _listTask = Task.Factory.StartNew(FillImages, _cancelSource.Token);
+#if DEBUG
+            Console.WriteLine(queryInput.Text);
+#endif
+            // _imageTask = Task.Run(FillImageList);
+            _imageTask = Task.Run(FillImageListLINQ);
 
             //MessageBox.Show(message);
 
         }
 
-        private void CancelImageFill()
+        struct Image_
         {
-            _cancelSource?.Cancel();
-            try
-            {
-                _listTask?.Wait();
-            }
-            catch(AggregateException)
-            { }
-
-            _web.Cancel();
+            public string name;
+            public string path;
         }
 
-        private Task FillImages()
-        {
-            if(InvokeRequired)
-            {
-                _listTask = new Task(() => FillImages());
-                _listTask.RunSynchronously(_taskScheduler);
-                return Task.CompletedTask;
-            }
+        Image_[] imageFiles = GetFileList();
 
+        static Image_[] GetFileList()
+        {
+            List<Image_> files_ = new List<Image_>();
+            var files = Directory.GetFiles("images").Where((_) => ImageDB.ImageDBCreator.IsImage(_));
+            foreach (var item in files)
+            {
+                files_.Add(new Image_()
+                {
+                    name = Path.GetFileNameWithoutExtension(item),
+                    path = item
+                });
+            }
+            return files_.ToArray();
+        }
+
+        private Task FillImageListLINQ()
+        {
+#if DEBUG
+            var startTime = System.DateTime.Now;
+#endif
+            var files = imageFiles.Where((_) => _.name.Contains(queryInput.Text, StringComparison.OrdinalIgnoreCase)).ToArray();
+            emoteList.SetDoubleBuffer(true);
+            int i = 0;
+            foreach(var item in files)
+            {
+                if (_cancelLoad)
+                {
+                    break;
+                }
+                AddToList(item.path, item.name, i++);
+            }
+            emoteList.SetDoubleBuffer(false);
+#if DEBUG
+            Console.WriteLine(System.DateTime.Now - startTime);
+#endif
+            return Task.CompletedTask;
+        }
+
+        private Task FillImageList()
+        {
+#if DEBUG
+            var startTime = System.DateTime.Now;
+#endif
             using (var reader = _eqc.GetEmotesReader(queryInput.Text))
             {
+                emoteList.SetDoubleBuffer(true);
+                // emoteList.BeginUpdate();
                 int i = 0;
                 while (reader.Read())
                 {
-                    var url = reader.GetString(0);
-                    _web.AddDl(url);
-                    emoteList.Items.Add(reader.GetString(1), i);
-                    emoteList.Items[i++].Tag = url;
-                    //message += $"{reader.GetString(0)} - {reader.GetString(1)}\n";
-                    if (_cancelSource.Token.IsCancellationRequested)
+                    if (_cancelLoad)
                     {
-                        _cancelSource.Token.ThrowIfCancellationRequested();
+                        break;
                     }
+
+                    var name = reader.GetString(1);
+                    var path = reader.GetString(0);
+                    AddToList(path, name, i);
+                    // emoteList.Items[i++].Tag = path;
+                    //message += $"{reader.GetString(0)} - {reader.GetString(1)}\n";
+                    i++;
                 }
+                emoteList.SetDoubleBuffer(false);
+                // emoteList.EndUpdate();
             }
+#if DEBUG
+            Console.WriteLine(System.DateTime.Now - startTime);
+#endif
+
             return Task.CompletedTask;
         }
+
+        private void AddToList(string path, string name, int i)
+        {
+            emoteList.Items.Add(name, i);
+            emoteList.LargeImageList.Images.Add(path, ResizedImage(path));
+        }
+
+        //resizes images so that the aspect ratio is preserved on thumbnail
+        private Bitmap ResizedImage(string file)
+        {
+            var image = Image.FromFile(file);
+            int iH = image.Height, iW = image.Width;
+
+            var cImg = new Bitmap(THUMB_SIZE, THUMB_SIZE);
+            var g = Graphics.FromImage(cImg);
+            g.Clear(Color.Transparent);
+
+            if(iH < THUMB_SIZE && iW < THUMB_SIZE)
+            {
+                // MessageBox.Show(file);
+                g.InterpolationMode = InterpolationMode.NearestNeighbor;
+                
+                int h = (THUMB_SIZE - iH) / 2;
+                int w = (THUMB_SIZE - iW) / 2;
+
+                g.DrawImage(image,
+                            new Rectangle(w, h, iW, iH),
+                            new Rectangle(0, 0, iW, iH),
+                            GraphicsUnit.Pixel);
+            }
+            else
+            {
+                g.InterpolationMode = InterpolationMode.HighQualityBicubic;
+
+                double mod;
+                if (iH > iW)
+                {
+                    mod = (double)iH / THUMB_SIZE;
+                }
+                else
+                {
+                    mod = (double)iW / THUMB_SIZE;
+                }
+                int h = (int)(iH / mod);
+                int w = (int)(iW / mod);
+
+                if(file == "images/airfish.png")
+                {
+                    Console.Write(' ');
+                }
+
+                g.DrawImage(image, 
+                            new Rectangle(0, 0, w, h), 
+                            new Rectangle(0, 0, iW, iH), 
+                            GraphicsUnit.Pixel);
+            }
+            return cImg;
+        }
+
+        private void CancelFill()
+        {
+            _cancelLoad = true;
+            _imageTask?.Wait();
+            _cancelLoad = false;
+        }
+        
         #endregion
 
     }
