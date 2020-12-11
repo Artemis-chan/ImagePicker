@@ -12,7 +12,6 @@ using GlobalHook.Core.MessageLoop;
 using GlobalHook.Core.Windows.Keyboard;
 using GlobalHook.Core.Windows.MessageLoop;
 using Keys = GlobalHook.Core.Keyboard.Keys;
-using ImageDB;
 
 namespace emote_gui_dotnet_win
 {

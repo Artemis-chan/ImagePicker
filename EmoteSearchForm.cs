@@ -11,7 +11,6 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using emote_gui_dotnet_win.DB;
 using Externs;
 
 namespace emote_gui_dotnet_win
@@ -19,8 +18,6 @@ namespace emote_gui_dotnet_win
     public partial class EmoteSearchForm : Form
     {
         private const int THUMB_SIZE = 38;
-
-        private EmoteQueryClient _eqc = new EmoteQueryClient();
 
         private Task _imageTask = null;
         private bool _cancelLoad = false;
@@ -126,7 +123,7 @@ namespace emote_gui_dotnet_win
             Console.WriteLine(queryInput.Text);
 #endif
             // _imageTask = Task.Run(FillImageList);
-            _imageTask = Task.Run(FillImageListLINQ);
+            _imageTask = Task.Run(FillImageList);
 
             //MessageBox.Show(message);
 
@@ -143,7 +140,7 @@ namespace emote_gui_dotnet_win
         static Image_[] GetFileList()
         {
             List<Image_> files_ = new List<Image_>();
-            var files = Directory.GetFiles("images").Where((_) => ImageDB.ImageDBCreator.IsImage(_));
+            var files = Directory.GetFiles("images").Where((_) => ImageCheck.IsImage(_));
             foreach (var item in files)
             {
                 files_.Add(new Image_()
@@ -155,11 +152,8 @@ namespace emote_gui_dotnet_win
             return files_.ToArray();
         }
 
-        private Task FillImageListLINQ()
+        private Task FillImageList()
         {
-#if DEBUG
-            var startTime = System.DateTime.Now;
-#endif
             var files = imageFiles.Where((_) => _.name.Contains(queryInput.Text, StringComparison.OrdinalIgnoreCase)).ToArray();
             emoteList.SetDoubleBuffer(true);
             int i = 0;
@@ -172,43 +166,6 @@ namespace emote_gui_dotnet_win
                 AddToList(item.path, item.name, i++);
             }
             emoteList.SetDoubleBuffer(false);
-#if DEBUG
-            Console.WriteLine(System.DateTime.Now - startTime);
-#endif
-            return Task.CompletedTask;
-        }
-
-        private Task FillImageList()
-        {
-#if DEBUG
-            var startTime = System.DateTime.Now;
-#endif
-            using (var reader = _eqc.GetEmotesReader(queryInput.Text))
-            {
-                emoteList.SetDoubleBuffer(true);
-                // emoteList.BeginUpdate();
-                int i = 0;
-                while (reader.Read())
-                {
-                    if (_cancelLoad)
-                    {
-                        break;
-                    }
-
-                    var name = reader.GetString(1);
-                    var path = reader.GetString(0);
-                    AddToList(path, name, i);
-                    // emoteList.Items[i++].Tag = path;
-                    //message += $"{reader.GetString(0)} - {reader.GetString(1)}\n";
-                    i++;
-                }
-                emoteList.SetDoubleBuffer(false);
-                // emoteList.EndUpdate();
-            }
-#if DEBUG
-            Console.WriteLine(System.DateTime.Now - startTime);
-#endif
-
             return Task.CompletedTask;
         }
 
