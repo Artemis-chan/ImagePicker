@@ -1,0 +1,3 @@
+[submodule "GlobalHook"]
+	path = GlobalHook
+	url = https://github.com/Kir-Antipov/GlobalHook

@@ -3,8 +3,11 @@ using System.Runtime.InteropServices;
 
 namespace Externs
 {
-    public static class User32
+    public static class PInvoke
     {
+        [DllImport("user32.dll")]
+        public static extern IntPtr GetForegroundWindow();
+
         [DllImport("user32.dll", SetLastError = true)]
         public static extern IntPtr SetForegroundWindow(IntPtr hWnd);
 
@@ -17,6 +20,12 @@ namespace Externs
         [DllImport("kernel32.dll", SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]
         public static extern bool AllocConsole();
-        
+
+        [DllImport("kernel32.dll")]
+        public static extern long WritePrivateProfileString(string section, string key, string val, string filePath);
+
+        [DllImport("kernel32.dll", CharSet = CharSet.Unicode)]
+        public static extern uint GetPrivateProfileString(string lpAppName, string lpKeyName, string lpDefault, System.Text.StringBuilder lpReturnedString, uint nSize, string lpFileName);
     }
+
 }

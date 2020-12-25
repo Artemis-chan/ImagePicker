@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Drawing;
 using System.Windows.Forms;
-namespace emote_gui_dotnet_win
+namespace ImagePicker
 {
     partial class EmoteSearchForm
     {
@@ -9,8 +9,12 @@ namespace emote_gui_dotnet_win
         ///  Required designer variable.
         /// </summary>
         private System.ComponentModel.IContainer components = null;
-        TextBox queryInput;
-        ListView emoteList;
+        TextBox queryInput = new TextBox();
+        ListView emoteList = new ListView();
+
+        //task bar icon
+        NotifyIcon taskbarIcon;
+        ContextMenuStrip taskbarMenu = new ContextMenuStrip();
 
         /// <summary>
         ///  Clean up any resources being used.
@@ -18,10 +22,12 @@ namespace emote_gui_dotnet_win
         /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
         protected override void Dispose(bool disposing)
         {
-            if (disposing && (components != null))
+            CancelFill();
+            if (disposing && components != null)
             {
                 components.Dispose();
             }
+            taskbarIcon.Dispose();
             base.Dispose(disposing);
         }
 
@@ -33,19 +39,14 @@ namespace emote_gui_dotnet_win
         /// </summary>
         private void InitializeComponent()
         {
-
-            queryInput = new TextBox();
-            emoteList = new ListView();
-
-            //queryInput
+            //run component init code
             InitQueryInput();
-            //list
             InitEmoteList();
 
             //form
             //AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             //AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            ClientSize = new System.Drawing.Size(524, 225);
+            ClientSize = new Size(524, 225);
             Controls.Add(emoteList);
             Controls.Add(queryInput);
             BackColor = Color.FromArgb(32, 32, 40);
@@ -58,16 +59,35 @@ namespace emote_gui_dotnet_win
             StartPosition = FormStartPosition.CenterScreen;
             FormBorderStyle = FormBorderStyle.FixedToolWindow;
 
+            UpdateImageDataArray();
+            InitTaskbarIcon();
+
             ResumeLayout(false);
             PerformLayout();
+        }
 
+        private void InitTaskbarIcon()
+        {
+            taskbarIcon = new NotifyIcon();
+
+            taskbarMenu.ShowImageMargin = false;
+            taskbarMenu.BackColor = Color.FromArgb(32, 32, 40);
+            taskbarMenu.ForeColor = Color.WhiteSmoke;
+
+            taskbarMenu.Items.Add(
+                new ToolStripMenuItem("Exit", null, new EventHandler((o, e) => Program.Exit()))
+            );
+
+            taskbarIcon.Icon = new Icon(System.Reflection.Assembly.GetExecutingAssembly().GetManifestResourceStream("ImagePicker.res.app.ico"));
+            taskbarIcon.ContextMenuStrip = taskbarMenu;
+            taskbarIcon.Visible = true;
         }
 
         private void InitEmoteList()
         {
             emoteList.Name = "Emote List";
-            emoteList.Location = new System.Drawing.Point(6, 6);
-            emoteList.Size = new System.Drawing.Size(512, 184);
+            emoteList.Location = new Point(6, 6);
+            emoteList.Size = new Size(512, 184);
             emoteList.BackColor = Color.FromArgb(60, 60, 68);
             emoteList.ForeColor = Color.WhiteSmoke;
             emoteList.TabIndex = 1;
@@ -76,16 +96,17 @@ namespace emote_gui_dotnet_win
             emoteList.HeaderStyle = ColumnHeaderStyle.None;
             emoteList.View = View.LargeIcon;
             emoteList.HideSelection = false;
+            emoteList.SetDoubleBuffer(true);
         }
 
         private void InitQueryInput()
         {
             queryInput.Name = "Query Input";
-            queryInput.Location = new System.Drawing.Point(6, 198);
-            queryInput.Size = new System.Drawing.Size(512, 20);
+            queryInput.Location = new Point(6, 198);
+            queryInput.Size = new Size(512, 20);
             queryInput.BackColor = Color.FromArgb(90, 90, 95);
             queryInput.ForeColor = Color.WhiteSmoke;
-            queryInput.TextChanged += new System.EventHandler(QueryEmote);
+            queryInput.TextChanged += new EventHandler(QueryEmote);
             queryInput.TabIndex = 0;
         }
 

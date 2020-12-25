@@ -4,13 +4,17 @@
     <OutputType>WinExe</OutputType>
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <UseWindowsForms>true</UseWindowsForms>
+    <ApplicationIcon>res\app.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Data.Sqlite" Version="5.0.0" />
+    <PackageReference Include="InputSimulatorCore" Version="1.0.5" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\GlobalHook\src\GlobalHook.Core.Windows\GlobalHook.Core.Windows.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="res\**" />
   </ItemGroup>
 
 </Project>

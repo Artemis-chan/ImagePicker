@@ -11,9 +11,12 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Runtime.InteropServices;
 using Externs;
+using WindowsInput;
+using WindowsInput.Native;
 
-namespace emote_gui_dotnet_win
+namespace ImagePicker
 {
     public partial class EmoteSearchForm : Form
     {
@@ -22,16 +25,26 @@ namespace emote_gui_dotnet_win
         private Task _imageTask = null;
         private bool _cancelLoad = false;
 
-        public EmoteSearchForm()
+        ImageData[] _imageFiles;
+        DateTime _checkTime = DateTime.MinValue;
+
+
+        struct ImageData
         {
-            Program.runninginstance = this;
-            InitializeComponent();
+            public string name;
+            public string path;
         }
 
-        // ~EmoteSearchForm()
-        // {
-        // }
+        public EmoteSearchForm()
+        {
+            InitializeComponent();
 
+            Program.instance = this;
+            taskbarIcon.ShowBalloonTip(2, "o(≧∇≦o)", "Started!\nPress alt + e to show!", ToolTipIcon.None);
+
+            WindowState = FormWindowState.Minimized;
+        }
+        
         #region Input
         public void Form_KeyDown(object sender, KeyEventArgs e)
         {
@@ -57,12 +70,20 @@ namespace emote_gui_dotnet_win
                     }
                     //MessageBox.Show((string)path);
                     // Clipboard.SetText((string)path);
-                    Clipboard.SetImage(emoteList.LargeImageList.Images[imageIndex]);
-                    // Clipboard.SetImage(Image.FromFile((string)emoteList.LargeImageList.Images.Keys[imageIndex]));
+                    // Clipboard.SetImage(emoteList.LargeImageList.Images[imageIndex]);
+                    Clipboard.SetImage(Image.FromFile((string)emoteList.LargeImageList.Images.Keys[imageIndex]));
                 }
                 Hide();
                 e.SuppressKeyPress = true;
+                
+                SendCtrlV();
             }
+        }
+
+        private void SendCtrlV()
+        {
+            Thread.Sleep(300);
+            new InputSimulator().Keyboard.ModifiedKeyStroke(VirtualKeyCode.CONTROL, VirtualKeyCode.VK_V);
         }
 
         protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
@@ -71,14 +92,15 @@ namespace emote_gui_dotnet_win
             {
                 if (msg.HWnd != emoteList.Handle)
                 {
-                    User32.PostMessage(emoteList.Handle, msg.Msg, msg.WParam, msg.LParam);
+                    emoteList.Focus();
+                    PInvoke.PostMessage(emoteList.Handle, msg.Msg, msg.WParam, msg.LParam);
                     return true;
                 }
             }
             else if(msg.HWnd != queryInput.Handle)
             {
                 queryInput.Focus();
-                User32.PostMessage(queryInput.Handle, msg.Msg, msg.WParam, msg.LParam);
+                PInvoke.PostMessage(queryInput.Handle, msg.Msg, msg.WParam, msg.LParam);
                 return true;
             }
             return base.ProcessCmdKey(ref msg, keyData);
@@ -129,33 +151,37 @@ namespace emote_gui_dotnet_win
 
         }
 
-        struct Image_
+        void UpdateImageDataArray()
         {
-            public string name;
-            public string path;
+            if (_checkTime < Directory.GetLastWriteTime("images"))
+            {
+                _imageFiles = GetFileList();
+                _checkTime = DateTime.Now;
+            }
         }
 
-        Image_[] imageFiles = GetFileList();
-
-        static Image_[] GetFileList()
+        ImageData[] GetFileList()
         {
-            List<Image_> files_ = new List<Image_>();
+            List<ImageData> files_ = new List<ImageData>();
             var files = Directory.GetFiles("images").Where((_) => ImageCheck.IsImage(_));
+
             foreach (var item in files)
             {
-                files_.Add(new Image_()
+                files_.Add(new ImageData()
                 {
                     name = Path.GetFileNameWithoutExtension(item),
                     path = item
                 });
             }
+
             return files_.ToArray();
         }
 
         private Task FillImageList()
         {
-            var files = imageFiles.Where((_) => _.name.Contains(queryInput.Text, StringComparison.OrdinalIgnoreCase)).ToArray();
-            emoteList.SetDoubleBuffer(true);
+            UpdateImageDataArray();
+            var files = _imageFiles.Where((_) => _.name.Contains(queryInput.Text, StringComparison.OrdinalIgnoreCase)).ToArray();
+            // emoteList.SetDoubleBuffer(true);
             int i = 0;
             foreach(var item in files)
             {
@@ -165,7 +191,7 @@ namespace emote_gui_dotnet_win
                 }
                 AddToList(item.path, item.name, i++);
             }
-            emoteList.SetDoubleBuffer(false);
+            // emoteList.SetDoubleBuffer(false);
             return Task.CompletedTask;
         }
 
