@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -17,6 +18,18 @@ namespace ImagePicker
 {
     static class Program
     {
+        private static string _imageFolder;
+        public static string ImageFolder
+        {
+            get { return _imageFolder; }
+            set
+            {
+                if(!Directory.Exists(value))
+                    Directory.CreateDirectory(value);
+                _imageFolder = value;
+            }
+        }
+
         public static EmoteSearchForm instance;
 
         static CancellationTokenSource source = new CancellationTokenSource();
@@ -24,7 +37,8 @@ namespace ImagePicker
         [STAThread]
         static void Main()
         {
-            
+            Init();
+
 #if DEBUG
             PInvoke.AllocConsole();
 #endif
@@ -35,6 +49,11 @@ namespace ImagePicker
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
             Application.Run(new EmoteSearchForm());
+        }
+
+        public static void Init()
+        {
+            ImageFolder = "Images";
         }
 
         public static void RunInputHook()

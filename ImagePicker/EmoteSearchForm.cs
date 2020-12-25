@@ -153,7 +153,7 @@ namespace ImagePicker
 
         void UpdateImageDataArray()
         {
-            if (_checkTime < Directory.GetLastWriteTime("images"))
+            if (_checkTime < Directory.GetLastWriteTime(Program.ImageFolder))
             {
                 _imageFiles = GetFileList();
                 _checkTime = DateTime.Now;
@@ -163,7 +163,7 @@ namespace ImagePicker
         ImageData[] GetFileList()
         {
             List<ImageData> files_ = new List<ImageData>();
-            var files = Directory.GetFiles("images").Where((_) => ImageCheck.IsImage(_));
+            var files = Directory.GetFiles(Program.ImageFolder).Where((_) => ImageCheck.IsImage(_));
 
             foreach (var item in files)
             {
