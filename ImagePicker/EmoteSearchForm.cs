@@ -111,9 +111,6 @@ namespace ImagePicker
         #region Query
         public void QueryEmote(object sender, EventArgs args)
         {
-            //for debugging purposes
-            // ResizedImage("images/airfish.png");
-            // return;
             CancelFill();
 
             emoteList.Items.Clear();
@@ -122,33 +119,14 @@ namespace ImagePicker
             if(String.IsNullOrWhiteSpace(queryInput.Text))
                 return;
 
-            //var message = "";
-            // var dir = @"Z:\Amick\Pictures\Microsoft Clip Organizer";
-            // var files = Directory.GetFiles(dir);
             var imgs = new ImageList(){ ImageSize = new Size(THUMB_SIZE, THUMB_SIZE), ColorDepth = ColorDepth.Depth32Bit, TransparentColor = Color.Transparent };
 
             emoteList.LargeImageList = imgs;
 
-            // for (int i = 0; i < files.Length; i++)
-            // {
-            //     emoteList.Items.Add(i.ToString(), i);
-            //     //emoteList.Items.Add(item);
-            // }
-            // for (int i = 0; i < files.Length; i++)
-            // {
-            //     string item = file;
-            //     emoteList.LargeImageList.Images.Add(Image.FromFile(item));
-            //     //emoteList.Items.Add(item);
-            // }
-
 #if DEBUG
             Console.WriteLine(queryInput.Text);
 #endif
-            // _imageTask = Task.Run(FillImageList);
             _imageTask = Task.Run(FillImageList);
-
-            //MessageBox.Show(message);
-
         }
 
         void UpdateImageDataArray()
@@ -255,6 +233,7 @@ namespace ImagePicker
 
         private void CancelFill()
         {
+            Console.WriteLine("cancelling");
             _cancelLoad = true;
             _imageTask?.Wait();
             _cancelLoad = false;

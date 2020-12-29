@@ -39,9 +39,7 @@ namespace ImagePicker
         {
             Init();
 
-#if DEBUG
-            PInvoke.AllocConsole();
-#endif
+            //PInvoke.AllocConsole();
 
             Task.Run(RunInputHook);
 
