@@ -8,10 +8,8 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="GlobalHook.Windows" Version="1.0.0" />
     <PackageReference Include="InputSimulatorCore" Version="1.0.5" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\GlobalHook\src\GlobalHook.Core.Windows\GlobalHook.Core.Windows.csproj" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="res\**" />
