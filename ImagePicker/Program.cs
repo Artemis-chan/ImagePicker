@@ -7,12 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using Externs;
-using GlobalHook.Core;
-using GlobalHook.Core.Keyboard;
-using GlobalHook.Core.MessageLoop;
-using GlobalHook.Core.Windows.Keyboard;
-using GlobalHook.Core.Windows.MessageLoop;
-using Keys = GlobalHook.Core.Keyboard.Keys;
+using Gma.System.MouseKeyHook;
 
 namespace ImagePicker
 {
@@ -39,37 +34,34 @@ namespace ImagePicker
         {
             Init();
 
-            //PInvoke.AllocConsole();
+			//PInvoke.AllocConsole();
 
-            Task.Run(RunInputHook);
-
-            Application.SetHighDpiMode(HighDpiMode.SystemAware);
-            Application.EnableVisualStyles();
-            Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new EmoteSearchForm());
-        }
+			RunInputHook();
+			RunApp();
+		}
 
         public static void Init()
         {
             ImageFolder = "Images";
         }
 
-        public static void RunInputHook()
-        {
-            IKeyboardHook kbHook = new KeyboardHook();
-            IMessageLoop loop = new MessageLoop();
+        private static void RunApp()
+		{
 
-            kbHook.OnEvent += (_, e) =>
-            {
-                if (e.Key.HasFlags(Keys.Alt, Keys.Control, Keys.Q))
-                {
-                    Exit();
-                }
-                else if (e.Key.HasFlags(Keys.Alt, Keys.E))
-                    StartAppInstance();
-            };
+			Application.SetHighDpiMode(HighDpiMode.SystemAware);
+			Application.EnableVisualStyles();
+			Application.SetCompatibleTextRenderingDefault(false);
+			Application.Run(new EmoteSearchForm());
+        }
 
-            loop.Run(source.Token, kbHook);
+        private static void RunInputHook()
+		{
+			var gh = Hook.GlobalEvents();
+			gh.OnCombination(new Dictionary<Combination, Action>()
+			{
+				{Combination.TriggeredBy(Keys.E).Alt(), () => ShowAppInstance()},
+                {Combination.TriggeredBy(Keys.Q).Alt(), () => Exit()}
+			});
         }
 
         public static void Exit()
@@ -80,7 +72,7 @@ namespace ImagePicker
             // Environment.Exit(0);
         }
 
-        private static void StartAppInstance()
+        private static void ShowAppInstance()
         {
             if(instance != null)
             {
